@@ -1,0 +1,51 @@
+version: '3'
+services:
+  rabbitmq-server:
+    container_name: rabbitmq-server
+    build:
+      context: ./rabbitmq-server
+      dockerfile: Dockerfile
+    hostname: rabbitmq-01
+    ports:
+      - '15672:15672'
+    env_file:
+      - ./rabbitmq-server/container.env
+    volumes:
+      - ./www:/var/www/:cached
+      - ./rabbitmq-server/config:/etc/rabbitmq
+  queue-publisher:
+    container_name: queue-publisher
+    build:
+      context: ./node-server
+      dockerfile: Dockerfile
+    volumes:
+      - ./www:/var/www/:cached
+      - ./node-server/supervisor:/etc/supervisor.d/
+    command: ['tail', '-f', '/dev/null']
+    # command:
+    #   [
+    #     '/bin/bash',
+    #     '-c',
+    #     'python2 /usr/bin/supervisord --nodaemon --configuration /etc/supervisor/supervisord.conf',
+    #   ]
+  queue-worker-01:
+    container_name: queue-worker-01
+    build:
+      context: ./node-server
+      dockerfile: Dockerfile
+    volumes:
+      - ./www:/var/www/:cached
+      - ./node-server/supervisor:/etc/supervisor.d/
+    # command: ['tail', '-f', '/dev/null']
+    command: supervisord --nodaemon
+
+  queue-worker-02:
+    container_name: queue-worker-02
+    build:
+      context: ./node-server
+      dockerfile: Dockerfile
+    volumes:
+      - ./www:/var/www/:cached
+      - ./node-server/supervisor:/etc/supervisor.d/
+    # command: ['tail', '-f', '/dev/null']
+    command: supervisord --nodaemon
